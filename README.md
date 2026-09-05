@@ -9,18 +9,25 @@ Reusable Lambda function module for SSR stacks.
 
 This module provisions a Lambda function and optional IAM role.
 
+
+## Maintaining This Module
+
+The generated interface below is authoritative for requirements, providers, resources, inputs, and outputs. Regenerate with `terraform-docs` **v0.20.0**: `terraform-docs .`. CI fails on drift; keep explanatory prose outside the generated markers.
+
+See the [contribution guide](https://github.com/pomo-studio/.github/blob/main/CONTRIBUTING.md) and [security policy](https://github.com/pomo-studio/.github/blob/main/SECURITY.md). PR validation does not prove a live plan or deployment. Infrastructure plans and applies belong in Terraform Cloud; never provide cloud credentials to untrusted PR code.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 
 ## Providers
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | 6.63.0 |
 
 ## Modules
@@ -30,7 +37,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [aws_iam_role.lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.basic_execution](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_lambda_function.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
@@ -38,7 +45,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_create_role"></a> [create\_role](#input\_create\_role) | Whether this module should create an IAM role for Lambda | `bool` | `true` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description of the Lambda function | `string` | `""` | no |
 | <a name="input_environment_variables"></a> [environment\_variables](#input\_environment\_variables) | Environment variables for the Lambda function | `map(string)` | `{}` | no |
@@ -58,7 +65,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_function_arn"></a> [function\_arn](#output\_function\_arn) | ARN of the Lambda function |
 | <a name="output_function_name"></a> [function\_name](#output\_function\_name) | Name of the Lambda function |
 | <a name="output_invoke_arn"></a> [invoke\_arn](#output\_invoke\_arn) | Invocation ARN of the Lambda function |
