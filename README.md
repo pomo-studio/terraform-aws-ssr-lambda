@@ -1,13 +1,66 @@
 # terraform-aws-ssr-lambda
 
-[![Terraform Validation](https://github.com/pomo-studio/terraform-aws-ssr-lambda/actions/workflows/terraform.yml/badge.svg)](https://github.com/pomo-studio/terraform-aws-ssr-lambda/actions/workflows/terraform.yml)
-[![Terraform Registry](https://img.shields.io/badge/terraform-registry-844FBA?logo=terraform)](https://registry.terraform.io/modules/pomo-studio/ssr-lambda/aws)
+A Lambda function deployed from an S3 object, with an optional execution role and the
+configuration a server-side rendering handler needs.
 
-- [Changelog](CHANGELOG.md)
+Composed by [`serverless-ssr`](https://registry.terraform.io/modules/pomo-studio/serverless-ssr/aws),
+which instantiates it twice — once per region — to give CloudFront a primary and a
+failover origin.
 
-Reusable Lambda function module for SSR stacks.
+## What it creates
 
-This module provisions a Lambda function and optional IAM role.
+- An `aws_lambda_function` whose code is read from an S3 bucket and key
+- Optionally an execution role, or it attaches one you already have
+
+## Design decisions
+
+**Code comes from S3, and Terraform stays out of the way.** The function carries
+`ignore_changes` on `s3_bucket`, `s3_key` and `s3_object_version`, so a deploy pipeline
+can call `UpdateFunctionCode` without Terraform reverting it on the next apply.
+Infrastructure and application deploys stay independent. Pass `source_code_hash` if you
+would rather Terraform did track the package.
+
+**The role is optional.** Set `create_role = false` and pass `role_arn` when several
+functions share one role, which is what `serverless-ssr` does across its two regions.
+
+## Usage
+
+```hcl
+module "lambda" {
+  source  = "pomo-studio/ssr-lambda/aws"
+  version = "~> 0.2"
+
+  providers = { aws = aws.primary }
+
+  function_name = "my-app-primary"
+  description   = "my-app — primary region"
+
+  s3_bucket = module.storage.lambda_deployments_primary_id
+  s3_key    = "lambda/function.zip"
+
+  handler     = "index.handler"
+  runtime     = "nodejs22.x"
+  memory_size = 1024
+  timeout     = 30
+
+  create_role = false
+  role_arn    = aws_iam_role.lambda_execution.arn
+
+  environment_variables = {
+    NITRO_PRESET = "aws-lambda"
+  }
+
+  tags = { Project = "my-app" }
+}
+```
+
+## Notes
+
+- The S3 object must exist before the function is created. Upload a placeholder package
+  first and `depends_on` it, or the first apply fails.
+- Because the S3 location is under `ignore_changes`, pointing the module at a different
+  bucket or key will **not** move the function. Change it out of band, or remove the
+  lifecycle rule.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
