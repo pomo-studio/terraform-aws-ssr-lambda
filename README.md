@@ -1,13 +1,62 @@
 # terraform-aws-ssr-lambda
 
-[![Terraform Validation](https://github.com/pomo-studio/terraform-aws-ssr-lambda/actions/workflows/terraform.yml/badge.svg)](https://github.com/pomo-studio/terraform-aws-ssr-lambda/actions/workflows/terraform.yml)
-[![Terraform Registry](https://img.shields.io/badge/terraform-registry-844FBA?logo=terraform)](https://registry.terraform.io/modules/pomo-studio/ssr-lambda/aws)
+A Lambda function that runs your server-rendered app, with its code loaded from S3.
 
-- [Changelog](CHANGELOG.md)
+**You probably want [serverless-ssr](https://registry.terraform.io/modules/pomo-studio/serverless-ssr/aws) instead.**
+It creates two of these, one per region, and puts CloudFront in front of them. Come here
+if you are building that arrangement yourself.
 
-Reusable Lambda function module for SSR stacks.
+## What you get
 
-This module provisions a Lambda function and optional IAM role.
+One Lambda function, reading its deployment package from a bucket and key you nominate.
+It can create an execution role for you, or use one you already have — handy when several
+functions share a role.
+
+## Using it
+
+```hcl
+module "lambda" {
+  source  = "pomo-studio/ssr-lambda/aws"
+  version = "~> 0.2"
+
+  providers = { aws = aws.primary }
+
+  function_name = "my-app-primary"
+  description   = "my-app — primary region"
+
+  s3_bucket = module.storage.lambda_deployments_primary_id
+  s3_key    = "lambda/function.zip"
+
+  handler     = "index.handler"
+  runtime     = "nodejs22.x"
+  memory_size = 1024
+  timeout     = 30
+
+  create_role = false
+  role_arn    = aws_iam_role.lambda_execution.arn
+
+  environment_variables = {
+    NITRO_PRESET = "aws-lambda"
+  }
+
+  tags = { Project = "my-app" }
+}
+```
+
+## Worth knowing
+
+**Terraform stops watching the code after the first apply.** The function ignores changes
+to its S3 bucket, key and object version, so your deploy pipeline can push new code
+without Terraform putting the old package back on the next run. Infrastructure and
+releases stay out of each other's way. If you would rather Terraform did track the
+package, pass `source_code_hash`.
+
+The flip side: pointing this module at a different bucket or key will not move the
+function. Change it outside Terraform, or drop the lifecycle rule.
+
+**Upload something before the first apply.** The function needs an object to exist at
+that bucket and key. A placeholder zip is enough — `depends_on` it, or the first apply
+fails.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
