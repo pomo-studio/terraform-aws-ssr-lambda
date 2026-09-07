@@ -1,29 +1,18 @@
 # terraform-aws-ssr-lambda
 
-A Lambda function deployed from an S3 object, with an optional execution role and the
-configuration a server-side rendering handler needs.
+A Lambda function that runs your server-rendered app, with its code loaded from S3.
 
-Composed by [`serverless-ssr`](https://registry.terraform.io/modules/pomo-studio/serverless-ssr/aws),
-which instantiates it twice — once per region — to give CloudFront a primary and a
-failover origin.
+**You probably want [serverless-ssr](https://registry.terraform.io/modules/pomo-studio/serverless-ssr/aws) instead.**
+It creates two of these, one per region, and puts CloudFront in front of them. Come here
+if you are building that arrangement yourself.
 
-## What it creates
+## What you get
 
-- An `aws_lambda_function` whose code is read from an S3 bucket and key
-- Optionally an execution role, or it attaches one you already have
+One Lambda function, reading its deployment package from a bucket and key you nominate.
+It can create an execution role for you, or use one you already have — handy when several
+functions share a role.
 
-## Design decisions
-
-**Code comes from S3, and Terraform stays out of the way.** The function carries
-`ignore_changes` on `s3_bucket`, `s3_key` and `s3_object_version`, so a deploy pipeline
-can call `UpdateFunctionCode` without Terraform reverting it on the next apply.
-Infrastructure and application deploys stay independent. Pass `source_code_hash` if you
-would rather Terraform did track the package.
-
-**The role is optional.** Set `create_role = false` and pass `role_arn` when several
-functions share one role, which is what `serverless-ssr` does across its two regions.
-
-## Usage
+## Using it
 
 ```hcl
 module "lambda" {
@@ -54,13 +43,20 @@ module "lambda" {
 }
 ```
 
-## Notes
+## Worth knowing
 
-- The S3 object must exist before the function is created. Upload a placeholder package
-  first and `depends_on` it, or the first apply fails.
-- Because the S3 location is under `ignore_changes`, pointing the module at a different
-  bucket or key will **not** move the function. Change it out of band, or remove the
-  lifecycle rule.
+**Terraform stops watching the code after the first apply.** The function ignores changes
+to its S3 bucket, key and object version, so your deploy pipeline can push new code
+without Terraform putting the old package back on the next run. Infrastructure and
+releases stay out of each other's way. If you would rather Terraform did track the
+package, pass `source_code_hash`.
+
+The flip side: pointing this module at a different bucket or key will not move the
+function. Change it outside Terraform, or drop the lifecycle rule.
+
+**Upload something before the first apply.** The function needs an object to exist at
+that bucket and key. A placeholder zip is enough — `depends_on` it, or the first apply
+fails.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
