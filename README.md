@@ -9,9 +9,9 @@ A Lambda function that runs your server-rendered app, with its code loaded from 
 
 ## When to use it
 
-Use this component when you are assembling the SSR delivery stack yourself and need the compute piece. It creates one function and, optionally, its execution role.
+Deploy a Lambda function whose code lives in S3, with an execution role you either create here or supply. Reach for it whenever a function should be released by uploading a package rather than rebuilding Terraform: a server-rendered app, an API handler, or a background worker.
 
-If you want a working site rather than the parts, use [`pomo-studio/serverless-ssr/aws`](https://registry.terraform.io/modules/pomo-studio/serverless-ssr/aws); it creates two of these, one per region, and puts CloudFront in front.
+It is also the compute piece of the [Serverless SSR blueprint](https://registry.terraform.io/modules/pomo-studio/serverless-ssr/aws), which creates two of these, one per region, behind CloudFront, with a reference application at [ssr.pomo.dev](https://ssr.pomo.dev).
 
 ## Quickstart
 
