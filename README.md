@@ -9,7 +9,7 @@ if you are building that arrangement yourself.
 ## What you get
 
 One Lambda function, reading its deployment package from a bucket and key you nominate.
-It can create an execution role for you, or use one you already have — handy when several
+It can create an execution role for you, or use one you already have: handy when several
 functions share a role.
 
 ## Using it
@@ -22,7 +22,7 @@ module "lambda" {
   providers = { aws = aws.primary }
 
   function_name = "my-app-primary"
-  description   = "my-app — primary region"
+  description   = "my-app: primary region"
 
   s3_bucket = module.storage.lambda_deployments_primary_id
   s3_key    = "lambda/function.zip"
@@ -55,8 +55,13 @@ The flip side: pointing this module at a different bucket or key will not move t
 function. Change it outside Terraform, or drop the lifecycle rule.
 
 **Upload something before the first apply.** The function needs an object to exist at
-that bucket and key. A placeholder zip is enough — `depends_on` it, or the first apply
+that bucket and key. A placeholder zip is enough: `depends_on` it, or the first apply
 fails.
+
+## Reference
+
+<details>
+<summary>Reference</summary>
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -113,3 +118,5 @@ No modules.
 | <a name="output_invoke_arn"></a> [invoke\_arn](#output\_invoke\_arn) | Invocation ARN of the Lambda function |
 | <a name="output_role_arn"></a> [role\_arn](#output\_role\_arn) | ARN of the IAM role |
 <!-- END_TF_DOCS -->
+
+</details>
