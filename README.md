@@ -1,18 +1,19 @@
 # terraform-aws-ssr-lambda
 
+[![Terraform Validation](https://github.com/pomo-studio/terraform-aws-ssr-lambda/actions/workflows/terraform.yml/badge.svg)](https://github.com/pomo-studio/terraform-aws-ssr-lambda/actions/workflows/terraform.yml)
+[![Terraform Registry](https://img.shields.io/badge/terraform-registry-844FBA?logo=terraform)](https://registry.terraform.io/modules/pomo-studio/ssr-lambda/aws)
+
+[Changelog](CHANGELOG.md)
+
 A Lambda function that runs your server-rendered app, with its code loaded from S3.
 
-**You probably want [serverless-ssr](https://registry.terraform.io/modules/pomo-studio/serverless-ssr/aws) instead.**
-It creates two of these, one per region, and puts CloudFront in front of them. Come here
-if you are building that arrangement yourself.
+## When to use it
 
-## What you get
+Use this component when you are assembling the SSR delivery stack yourself and need the compute piece. It creates one function and, optionally, its execution role.
 
-One Lambda function, reading its deployment package from a bucket and key you nominate.
-It can create an execution role for you, or use one you already have: handy when several
-functions share a role.
+If you want a working site rather than the parts, use [`pomo-studio/serverless-ssr/aws`](https://registry.terraform.io/modules/pomo-studio/serverless-ssr/aws); it creates two of these, one per region, and puts CloudFront in front.
 
-## Using it
+## Quickstart
 
 ```hcl
 module "lambda" {
@@ -22,7 +23,7 @@ module "lambda" {
   providers = { aws = aws.primary }
 
   function_name = "my-app-primary"
-  description   = "my-app: primary region"
+  description   = "my-app primary region"
 
   s3_bucket = module.storage.lambda_deployments_primary_id
   s3_key    = "lambda/function.zip"
@@ -43,20 +44,21 @@ module "lambda" {
 }
 ```
 
-## Worth knowing
+## What it creates
 
-**Terraform stops watching the code after the first apply.** The function ignores changes
-to its S3 bucket, key and object version, so your deploy pipeline can push new code
-without Terraform putting the old package back on the next run. Infrastructure and
-releases stay out of each other's way. If you would rather Terraform did track the
-package, pass `source_code_hash`.
+- One `aws_lambda_function`, reading its package from the bucket and key you nominate.
+- An execution role, when `create_role` is true.
+- The basic execution policy attachment for that role.
 
-The flip side: pointing this module at a different bucket or key will not move the
-function. Change it outside Terraform, or drop the lifecycle rule.
+## Design decisions
 
-**Upload something before the first apply.** The function needs an object to exist at
-that bucket and key. A placeholder zip is enough: `depends_on` it, or the first apply
-fails.
+- **Terraform stops watching the code after the first apply.** The function ignores changes to its S3 bucket, key, and object version, so your deploy pipeline can push new code without Terraform restoring the old package. If you would rather Terraform tracked the package, pass `source_code_hash`.
+- **Upload before you apply.** The function needs an object to exist at that bucket and key. A placeholder zip is enough; `depends_on` it, or the first apply fails.
+- **Role optional.** Supply an existing `role_arn` to share one execution role across functions, or let the module create one.
+
+## Examples
+
+- [Basic](examples/basic/)
 
 ## Reference
 
@@ -120,3 +122,11 @@ No modules.
 <!-- END_TF_DOCS -->
 
 </details>
+
+## Support and license
+
+Part of the [pomo-studio](https://github.com/pomo-studio) Terraform components, run in production by [postmodern.](https://pomo.studio). Regenerate the reference with `terraform-docs` v0.20.0 (`terraform-docs .`); CI fails on drift.
+
+See the [contribution guide](https://github.com/pomo-studio/.github/blob/main/CONTRIBUTING.md) and [security policy](https://github.com/pomo-studio/.github/blob/main/SECURITY.md).
+
+MIT licensed. See [LICENSE](LICENSE).
